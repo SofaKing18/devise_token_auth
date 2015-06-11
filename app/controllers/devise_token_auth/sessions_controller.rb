@@ -1,6 +1,8 @@
 # see http://www.emilsoman.com/blog/2013/05/18/building-a-tested/
 module DeviseTokenAuth
   class SessionsController < DeviseTokenAuth::ApplicationController
+    I18N_ERRORS_KEY = "devise_token_auth.errors"
+
     before_filter :set_user_by_token, :only => [:destroy]
 
     def create
@@ -39,19 +41,13 @@ module DeviseTokenAuth
         }
 
       elsif @resource and not @resource.confirmed?
-        render json: {
-          success: false,
-          errors: [
-            "A confirmation email was sent to your account at #{@resource.email}. "+
-            "You must follow the instructions in the email before your account "+
-            "can be activated"
-          ]
-        }, status: 401
+        default_message = "A confirmation email was sent to your account at #{@resource.email}. "+
+          "You must follow the instructions in the email before your account "+
+          "can be activated"
+        render_json_error :unauthorized, :confirmation_was_sent, default: default_message, email: @resource.email
 
       else
-        render json: {
-          errors: ["Invalid login credentials. Please try again."]
-        }, status: 401
+        render_json_error :unauthorized, :invalid_login, default: "Invalid login credentials. Please try again."
       end
     end
 
@@ -70,9 +66,7 @@ module DeviseTokenAuth
         }, status: 200
 
       else
-        render json: {
-          errors: ["User was not found or was not logged in."]
-        }, status: 404
+        render_json_error :not_found, :user_not_found, default: "User was not found or was not logged in."
       end
     end
 
@@ -82,6 +76,13 @@ module DeviseTokenAuth
 
     def resource_params
       params.permit(devise_parameter_sanitizer.for(:sign_in))
+    end
+
+    def render_json_error(status, error, options)
+      message = I18n.t("#{I18N_ERRORS_KEY}.#{error}", options)
+      render json: {
+        errors: [message]
+      }, status: status
     end
   end
 end
