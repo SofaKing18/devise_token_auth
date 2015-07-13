@@ -19,9 +19,14 @@ module DeviseTokenAuth
         q = "BINARY uid='#{email}' AND provider='email'"
       end
 
-      @resource = resource_class.where(q).first
+      resources = resource_class.where(q)
+      resources = resources.active if resource_class.respond_to?(:active)
+      @resource = resources.first
 
-      if @resource and valid_params? and @resource.valid_password?(resource_params[:password]) and @resource.confirmed?
+      if @resource and not (!@resource.respond_to?(:active_for_authentication?) or @resource.active_for_authentication?)
+        render_json_error :unauthorized, :invalid_login, default: "Invalid login credentials. Please try again."
+
+      elsif @resource and valid_params? and @resource.valid_password?(resource_params[:password]) and @resource.confirmed?
         # create client id
         @client_id = SecureRandom.urlsafe_base64(nil, false)
         @token     = SecureRandom.urlsafe_base64(nil, false)
