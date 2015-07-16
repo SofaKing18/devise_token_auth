@@ -17,6 +17,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
     # determine target authentication class
     rc = resource_class(mapping)
+    rc = rc.active if rc.respond_to?(:active)
 
     # no default user defined
     return unless rc
