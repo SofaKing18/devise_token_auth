@@ -65,6 +65,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
 
       if not DeviseTokenAuth.change_headers_on_each_request
         auth_header = @resource.build_auth_header(@token, @client_id)
+        return unless auth_header
 
         # update the response header
         response.headers.merge!(auth_header)
