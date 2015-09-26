@@ -6,11 +6,16 @@ module DeviseTokenAuth
     before_filter :set_user_by_token, :only => [:destroy]
 
     def create
-      # honor devise configuration for case_insensitive_keys
-      if resource_class.case_insensitive_keys.include?(:email)
-        email = resource_params[:email].downcase
+      if valid_params?
+        # honor devise configuration for case_insensitive_keys
+        if resource_class.case_insensitive_keys.include?(:email)
+          email = resource_params[:email].downcase
+        else
+          email = resource_params[:email]
+        end
       else
-        email = resource_params[:email]
+        render_json_error :unauthorized, :invalid_login, default: "Invalid login credentials. Please try again."
+        return
       end
 
       q = "uid='#{email}' AND provider='email'"
