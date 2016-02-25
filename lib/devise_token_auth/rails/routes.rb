@@ -28,7 +28,8 @@ module ActionDispatch::Routing
           :class_name  => resource,
           :module      => :devise,
           :path        => "",
-          :controllers => controllers
+          :controllers => controllers,
+          :skip        => opts[:skip]
 
         devise_scope resource.underscore.to_sym do
           # path to verify token validity
