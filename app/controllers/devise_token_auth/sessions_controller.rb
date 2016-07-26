@@ -18,15 +18,18 @@ module DeviseTokenAuth
         return
       end
 
-      q = "uid='#{email}' AND provider='email'"
+      # very bad logic
+      unless @resource
+        q = "uid='#{email}' AND provider='email'"
 
-      if ActiveRecord::Base.connection.adapter_name.downcase.starts_with? 'mysql'
-        q = "BINARY uid='#{email}' AND provider='email'"
+        if ActiveRecord::Base.connection.adapter_name.downcase.starts_with? 'mysql'
+          q = "BINARY uid='#{email}' AND provider='email'"
+        end
+
+        resources = resource_class.where(q)
+        resources = resources.active if resource_class.respond_to?(:active)
+        @resource = resources.first
       end
-
-      resources = resource_class.where(q)
-      resources = resources.active if resource_class.respond_to?(:active)
-      @resource = resources.first
 
       if @resource and not (!@resource.respond_to?(:active_for_authentication?) or @resource.active_for_authentication?)
         render_json_error :unauthorized, :invalid_login, default: "Invalid login credentials. Please try again."
