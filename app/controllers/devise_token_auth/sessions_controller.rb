@@ -8,7 +8,7 @@ module DeviseTokenAuth
     def create
       if valid_params?
         # honor devise configuration for case_insensitive_keys
-        if resource_class.case_insensitive_keys.include?(:email)
+        if resource_class.case_insensitive_keys.include?(:email) && resource_params.has_key?(:email)
           email = resource_params[:email].downcase
         else
           email = resource_params[:email]
